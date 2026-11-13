@@ -303,6 +303,14 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Override protected void onResume() {
+        super.onResume();
+        if (webView != null && !hasInternet()) {
+            String current = webView.getUrl();
+            if (current == null || !current.startsWith("https://veltrix-study-offline.local/")) showOfflinePage();
+        }
+    }
+
     @Override protected void onSaveInstanceState(Bundle outState) {
         if (webView != null) webView.saveState(outState);
         super.onSaveInstanceState(outState);
