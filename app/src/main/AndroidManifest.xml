@@ -6,8 +6,8 @@
     <application
         android:allowBackup="false"
         android:label="VELTRIX STUDY"
-        android:icon="@android:drawable/ic_menu_edit"
-        android:roundIcon="@android:drawable/ic_menu_edit"
+        android:icon="@drawable/ic_veltrix_mark"
+        android:roundIcon="@drawable/ic_veltrix_mark"
         android:theme="@android:style/Theme.Material.Light.NoActionBar"
         android:usesCleartextTraffic="false"
         android:supportsRtl="true">
