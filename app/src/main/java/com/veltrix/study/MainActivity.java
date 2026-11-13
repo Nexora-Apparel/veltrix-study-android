@@ -29,6 +29,9 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -112,7 +115,7 @@ public class MainActivity extends Activity {
             }
             @Override public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                if (url != null && url.startsWith("file:///android_asset/offline.html")) {
+                if (url != null && url.startsWith("https://veltrix-study-offline.local/")) {
                     progress.setVisibility(View.GONE);
                 } else {
                     installStudyReminderButton();
@@ -145,7 +148,16 @@ public class MainActivity extends Activity {
         if (webView == null) return;
         progress.setVisibility(View.GONE);
         webView.stopLoading();
-        webView.loadUrl("file:///android_asset/offline.html");
+        try (InputStream input = getAssets().open("offline.html");
+             ByteArrayOutputStream output = new ByteArrayOutputStream()) {
+            byte[] buffer = new byte[8192];
+            int count;
+            while ((count = input.read(buffer)) != -1) output.write(buffer, 0, count);
+            String page = output.toString("UTF-8");
+            webView.loadDataWithBaseURL("https://veltrix-study-offline.local/", page, "text/html", "UTF-8", null);
+        } catch (Exception error) {
+            Toast.makeText(this, "Your offline study page could not be opened.", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void retryOnline() {
