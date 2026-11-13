@@ -87,7 +87,7 @@ public class ReminderReceiver extends BroadcastReceiver {
         Intent open = new Intent(context, MainActivity.class);
         PendingIntent content = PendingIntent.getActivity(context, 702, open, PendingIntent.FLAG_UPDATE_CURRENT | (Build.VERSION.SDK_INT >= 23 ? PendingIntent.FLAG_IMMUTABLE : 0));
         Notification.Builder builder = Build.VERSION.SDK_INT >= 26 ? new Notification.Builder(context, CHANNEL) : new Notification.Builder(context);
-        builder.setSmallIcon(android.R.drawable.ic_menu_edit)
+        builder.setSmallIcon(R.drawable.ic_veltrix_mark)
             .setContentTitle("A little time for your goals")
             .setContentText("Your study session is waiting. Open VELTRIX STUDY when you're ready.")
             .setContentIntent(content)
