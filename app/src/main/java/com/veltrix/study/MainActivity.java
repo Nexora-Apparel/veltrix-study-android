@@ -5,6 +5,8 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.Typeface;
@@ -90,6 +92,14 @@ public class MainActivity extends Activity {
             }
         });
         webView.setWebViewClient(new WebViewClient() {
+            @Override public void onReceivedError(WebView view, WebResourceRequest request, android.webkit.WebResourceError error) {
+                super.onReceivedError(view, request, error);
+                if (request.isForMainFrame()) showOfflinePage();
+            }
+            @Override public void onReceivedHttpError(WebView view, WebResourceRequest request, android.webkit.WebResourceResponse response) {
+                super.onReceivedHttpError(view, request, response);
+                if (request.isForMainFrame() && response.getStatusCode() >= 500) showOfflinePage();
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 String host = uri.getHost() == null ? "" : uri.getHost();
@@ -102,7 +112,11 @@ public class MainActivity extends Activity {
             }
             @Override public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
-                installStudyReminderButton();
+                if (url != null && url.startsWith("file:///android_asset/offline.html")) {
+                    progress.setVisibility(View.GONE);
+                } else {
+                    installStudyReminderButton();
+                }
             }
         });
 
@@ -111,9 +125,35 @@ public class MainActivity extends Activity {
 
         if (savedInstanceState != null && webView.restoreState(savedInstanceState) != null) {
             // Keep the current page and scroll position when Android recreates the activity.
+        } else if (!hasInternet()) {
+            showOfflinePage();
         } else {
             webView.loadUrl(HOME);
         }
+    }
+
+    private boolean hasInternet() {
+        ConnectivityManager manager = (ConnectivityManager) getSystemService(CONNECTIVITY_SERVICE);
+        if (manager == null) return false;
+        android.net.Network network = manager.getActiveNetwork();
+        if (network == null) return false;
+        NetworkCapabilities capabilities = manager.getNetworkCapabilities(network);
+        return capabilities != null && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET);
+    }
+
+    private void showOfflinePage() {
+        if (webView == null) return;
+        progress.setVisibility(View.GONE);
+        webView.stopLoading();
+        webView.loadUrl("file:///android_asset/offline.html");
+    }
+
+    private void retryOnline() {
+        if (!hasInternet()) {
+            Toast.makeText(this, "You're still offline. Your study plan is ready here.", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        webView.loadUrl(HOME);
     }
 
     private void installStudyReminderButton() {
@@ -132,6 +172,9 @@ public class MainActivity extends Activity {
     private class ReminderBridge {
         @android.webkit.JavascriptInterface public void openReminders() {
             runOnUiThread(() -> showReminderSettings());
+        }
+        @android.webkit.JavascriptInterface public void retryOnline() {
+            runOnUiThread(() -> retryOnline());
         }
     }
 
